@@ -42,7 +42,7 @@ export class Interceptor {
     args: unknown[],
     sessionKey?: string
   ): Promise<void> {
-    const rule = this.lookupRule(moduleName, methodName);
+    const rule = this.lookupRuleWithArgs(moduleName, methodName, args);
 
     if (this.logEnabled) {
       this.logInterception(moduleName, methodName, rule.action);
@@ -59,17 +59,17 @@ export class Interceptor {
       if (isChannelMode) {
         const instructions = this.respondToolAvailable
           ? `Ask the user: YES, NO, or ALLOW (auto-approve for 15 min).\n` +
-            `- YES → clawbands_respond({ decision: "yes" }), then retry.\n` +
-            `- NO → clawbands_respond({ decision: "no" }). Do NOT retry.\n` +
-            `- ALLOW → clawbands_respond({ decision: "allow" }), then retry. Auto-approves this action for 15 minutes.`
+          `- YES → clawbands_respond({ decision: "yes" }), then retry.\n` +
+          `- NO → clawbands_respond({ decision: "no" }). Do NOT retry.\n` +
+          `- ALLOW → clawbands_respond({ decision: "allow" }), then retry. Auto-approves this action for 15 minutes.`
           : `Ask the user YES or NO.\n` +
-            `- If YES: call ${moduleName}.${methodName}() again exactly as before.\n` +
-            `- If NO: do NOT call the tool again. Tell the user the action was cancelled.`;
+          `- If YES: call ${moduleName}.${methodName}() again exactly as before.\n` +
+          `- If NO: do NOT call the tool again. Tell the user the action was cancelled.`;
 
         throw new Error(
           `[ClawBands:APPROVAL_REQUIRED] ${moduleName}.${methodName}() is blocked pending human approval. ` +
-            `Risk: ${detail}\n` +
-            instructions
+          `Risk: ${detail}\n` +
+          instructions
         );
       }
 
@@ -192,5 +192,61 @@ export class Interceptor {
           : chalk.yellow(action);
 
     logger.info(`${chalk.cyan('ClawBands:')} ${moduleName}.${methodName}() → ${coloredAction}`);
+  }
+
+  /**
+   * Resolves the effective security rule for a tool call.
+   * @returns The resolved SecurityRule
+   */
+  private lookupRuleWithArgs(
+    moduleName: string,
+    methodName: string,
+    args: unknown[]
+  ): SecurityRule {
+    const base = this.lookupRule(moduleName, methodName);
+
+    if (moduleName === 'Shell' && methodName === 'exec') {
+      const first = args?.[0] as any;
+
+      const cmd: string =
+        typeof first?.command === 'string'
+          ? first.command
+          : Array.isArray(first?.argv)
+            ? first.argv.join(' ')
+            : typeof first === 'string'
+              ? first
+              : '';
+
+      if (cmd && this.policy.commandAllow?.length) {
+        const tokens = cmd.trim().split(/\s+/);
+
+        for (const prefix of this.policy.commandAllow) {
+          if (this.startsWithTokens(tokens, prefix)) {
+            return {
+              action: 'ALLOW',
+              description: `Matched commandAllow: ${prefix.join(' ')}`
+            };
+          }
+        }
+      }
+    }
+
+    return base;
+  }
+
+  /**
+   * Checks whether a token array starts with the given prefix tokens.
+   * @param tokens - Tokenized command
+   * @param prefix - Allowed prefix tokens
+   * @returns True if prefix matches
+   */
+  private startsWithTokens(tokens: string[], prefix: string[]): boolean {
+    if (tokens.length < prefix.length) return false;
+
+    for (let i = 0; i < prefix.length; i++) {
+      if (tokens[i] !== prefix[i]) return false;
+    }
+
+    return true;
   }
 }

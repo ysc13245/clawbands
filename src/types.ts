@@ -29,6 +29,7 @@ export interface SecurityPolicy {
       [methodName: string]: SecurityRule;
     };
   };
+  commandAllow?: string[][];
 }
 
 /**

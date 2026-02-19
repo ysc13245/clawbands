@@ -100,11 +100,37 @@ ClawBands uses three decision types:
 | **ASK** | Prompt for approval (e.g., file writes) |
 | **DENY** | Block automatically (e.g., file deletes) |
 
+In addition, `commandAllow` enables prefix-based allow rules for `Shell.exec`.
+
 Default policy (Balanced):
 - FileSystem: read=ALLOW, write=ASK, delete=DENY
 - Shell: bash=ASK, exec=ASK
 - Network: fetch=ASK, request=ASK
 - Everything else: ASK (fail-secure default)
+
+### Command allowlist for Shell.exec
+
+You can allow common diagnostic commands for `Shell.exec` without prompts using `commandAllow`.
+This applies to `Shell.exec` only (not `Shell.bash`).
+
+Example:
+
+```json
+{
+  "commandAllow": [
+    ["docker", "logs"],
+    ["docker", "ps"],
+    ["openclaw", "config", "get"],
+    ["journalctl"],
+    ["ls"],
+    ["cat"]
+  ]
+}
+```
+
+Rules are matched by token prefix.  
+For example, `["docker","logs"]` matches `docker logs nginx -f`.
+
 
 ## CLI Commands
 

@@ -59,17 +59,17 @@ export class Interceptor {
       if (isChannelMode) {
         const instructions = this.respondToolAvailable
           ? `Ask the user: YES, NO, or ALLOW (auto-approve for 15 min).\n` +
-          `- YES → clawbands_respond({ decision: "yes" }), then retry.\n` +
-          `- NO → clawbands_respond({ decision: "no" }). Do NOT retry.\n` +
-          `- ALLOW → clawbands_respond({ decision: "allow" }), then retry. Auto-approves this action for 15 minutes.`
+            `- YES → clawbands_respond({ decision: "yes" }), then retry.\n` +
+            `- NO → clawbands_respond({ decision: "no" }). Do NOT retry.\n` +
+            `- ALLOW → clawbands_respond({ decision: "allow" }), then retry. Auto-approves this action for 15 minutes.`
           : `Ask the user YES or NO.\n` +
-          `- If YES: call ${moduleName}.${methodName}() again exactly as before.\n` +
-          `- If NO: do NOT call the tool again. Tell the user the action was cancelled.`;
+            `- If YES: call ${moduleName}.${methodName}() again exactly as before.\n` +
+            `- If NO: do NOT call the tool again. Tell the user the action was cancelled.`;
 
         throw new Error(
           `[ClawBands:APPROVAL_REQUIRED] ${moduleName}.${methodName}() is blocked pending human approval. ` +
-          `Risk: ${detail}\n` +
-          instructions
+            `Risk: ${detail}\n` +
+            instructions
         );
       }
 
@@ -224,7 +224,7 @@ export class Interceptor {
           if (this.startsWithTokens(tokens, prefix)) {
             return {
               action: 'ALLOW',
-              description: `Matched commandAllow: ${prefix.join(' ')}`
+              description: `Matched commandAllow: ${prefix.join(' ')}`,
             };
           }
         }

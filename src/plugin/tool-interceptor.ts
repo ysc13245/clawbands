@@ -151,7 +151,10 @@ function handleRespondTool(
     const count = approvalQueue.approve(sessionKey);
     const rules = pending.map((p) => `${p.moduleName}.${p.methodName}`).join(', ');
     logger.info(`[${CLAWBANDS_RESPOND_TOOL}] ALLOW for 15 min`, { sessionKey, rules, count });
-    return { block: true, blockReason: `Approved for 15 minutes: ${rules}. Retry the blocked tool.` };
+    return {
+      block: true,
+      blockReason: `Approved for 15 minutes: ${rules}. Retry the blocked tool.`,
+    };
   }
 
   logger.warn(`[${CLAWBANDS_RESPOND_TOOL}] Invalid decision: "${params.decision}"`, { sessionKey });

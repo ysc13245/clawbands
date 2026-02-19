@@ -45,14 +45,16 @@ function tryRegisterTool(api: OpenClawPluginApi): boolean {
     }
     api.registerTool({
       name: CLAWBANDS_RESPOND_TOOL,
-      description: 'Respond to a ClawBands security prompt. Call after the user says YES, NO, or ALLOW.',
+      description:
+        'Respond to a ClawBands security prompt. Call after the user says YES, NO, or ALLOW.',
       parameters: {
         type: 'object',
         properties: {
           decision: {
             type: 'string',
             enum: ['yes', 'no', 'allow'],
-            description: 'The user decision: "yes" to approve once, "no" to deny, "allow" to auto-approve for 15 minutes.',
+            description:
+              'The user decision: "yes" to approve once, "no" to deny, "allow" to auto-approve for 15 minutes.',
           },
         },
         required: ['decision'],

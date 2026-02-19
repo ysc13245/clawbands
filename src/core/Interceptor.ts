@@ -205,17 +205,10 @@ export class Interceptor {
   ): SecurityRule {
     const base = this.lookupRule(moduleName, methodName);
 
-    if (moduleName === 'Shell' && methodName === 'exec') {
-      const first = args?.[0] as any;
+    if (base.action !== 'ASK') return base;
 
-      const cmd: string =
-        typeof first?.command === 'string'
-          ? first.command
-          : Array.isArray(first?.argv)
-            ? first.argv.join(' ')
-            : typeof first === 'string'
-              ? first
-              : '';
+    if (moduleName === 'Shell' && methodName === 'exec') {
+      const cmd = this.extractCommand(args);
 
       if (cmd && this.policy.commandAllow?.length) {
         const tokens = cmd.trim().split(/\s+/);
@@ -249,4 +242,29 @@ export class Interceptor {
 
     return true;
   }
+
+  /**
+   * Extracts a command string from Shell.exec args.
+   * @param args - Tool call arguments
+   * @returns The command string, or empty string if unavailable
+   */
+  private extractCommand(args: unknown[]): string {
+    const first = args?.[0];
+
+    if (typeof first === 'string') return first;
+
+    if (!first || typeof first !== 'object') return '';
+
+    const obj = first as Record<string, unknown>;
+
+    if (typeof obj.command === 'string') return obj.command;
+
+    if (Array.isArray(obj.argv)) {
+      const parts = obj.argv.filter((x): x is string => typeof x === 'string');
+      if (parts.length > 0) return parts.join(' ');
+    }
+
+    return '';
+  }
 }
+
